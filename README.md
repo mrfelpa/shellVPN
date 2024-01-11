@@ -34,5 +34,5 @@
 
 # Future Improvements:
 
-Code optimization to improve performance.
-Added support for more VPN protocols.
+- [ ] Code optimization to improve performance.
+- [ ] Added support for more VPN protocols.
