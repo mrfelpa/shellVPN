@@ -1,4 +1,10 @@
 
+# Future Improvements:
+
+- [X] Added support for more VPN protocols.
+
+# Detail
+
 - This script can be used to automate the configuration of VPNs in a variety of scenarios.
 - For example, the script can be used to configure VPNs to:
 
@@ -30,9 +36,3 @@
     ***Error 4:*** One or more errors occurred while creating the VPN connections.
 
 - To resolve these errors, verify that the XML file exists and is valid. Also check that the provided parameters are valid. If the script is still generating errors, check the PowerShell log for more information.
-
-
-# Future Improvements:
-
-- [ ] Code optimization to improve performance.
-- [ ] Added support for more VPN protocols.
