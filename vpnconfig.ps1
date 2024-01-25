@@ -1,6 +1,5 @@
-
-Import-Module VpnClientConfiguration
-Import-Module VpnGateway
+import-module VpnClientConfiguration
+import-module VpnGateway
 
 # Function to validate the XML schema
 function Validate-XmlSchema {
@@ -9,12 +8,11 @@ function Validate-XmlSchema {
         [string] $SchemaPath
     )
 
-    # Check if the file exists
-    Test-Path $SchemaPath
+    test-path $SchemaPath
 
-    $schema = Get-Content $SchemaPath
+    $schema = get-content $SchemaPath
 
-    [xml](Get-Content "C:\VPN\VPNConfigurations.xml").Validate($schema)
+    [xml](get-content "C:\VPN\VPNConfigurations.xml").Validate($schema)
 }
 
 # Function to create VPN connections
@@ -26,9 +24,16 @@ class VpnConnection {
     [string] $LocalGatewayIP
     [string] $RemoteGatewayIP
     [string] $SharedKey
+    [string] $WireGuardPrivateKey
+    [string] $WireGuardPublicKey
+    [string] $L2TPUsername
+    [string] $L2TPPassword
+    [string] $IKEv2SharedKey
+    [string] $IKEv2PreSharedKey
 
     [CmdletBinding()]
-    public VpnConnection([string] $Name, [string] $Protocol, [string] $LocalGatewayName, [string] $RemoteGatewayName, [string] $LocalGatewayIP, [string] $RemoteGatewayIP, [string] $SharedKey) {
+    public VpnConnection([string] $Name, [string] $Protocol, [string] $LocalGatewayName, [string] $RemoteGatewayName, [string] $LocalGatewayIP, [string] $RemoteGatewayIP, [string] $SharedKey,
+               [string] $WireGuardPrivateKey, [string] $WireGuardPublicKey, [string] $L2TPUsername, [string] $L2TPPassword, [string] $IKEv2SharedKey, [string] $IKEv2PreSharedKey) {
         $this.Name = $Name
         $this.Protocol = $Protocol
         $this.LocalGatewayName = $LocalGatewayName
@@ -36,10 +41,22 @@ class VpnConnection {
         $this.LocalGatewayIP = $LocalGatewayIP
         $this.RemoteGatewayIP = $RemoteGatewayIP
         $this.SharedKey = $SharedKey
+        $this.WireGuardPrivateKey = $WireGuardPrivateKey
+        $this.WireGuardPublicKey = $WireGuardPublicKey
+        $this.L2TPUsername = $L2TPUsername
+        $this.L2TPPassword = $L2TPPassword
+        $this.IKEv2SharedKey = $IKEv2SharedKey
+        $this.IKEv2PreSharedKey = $IKEv2PreSharedKey
     }
 
     public New-VpnConnection() {
-        New-VpnConnection -Name $this.Name -Protocol $this.Protocol -LocalGatewayName $this.LocalGatewayName -RemoteGatewayName $this.RemoteGatewayName -LocalGatewayIP $this.LocalGatewayIP -RemoteGatewayIP $this.RemoteGatewayIP -SharedKey $this.SharedKey
+        if ($this.Protocol == "WireGuard") {
+            New-VpnConnection -Name $this.Name -Protocol "WireGuard" -WireGuardPrivateKey $this.WireGuardPrivateKey -WireGuardPublicKey $this.WireGuardPublicKey
+        } elseif ($this.Protocol == "L2TP/IPsec") {
+            New-L2TPVpnConnection -Name $this.Name -RemoteAddress $this.RemoteGatewayIP -Username $this.L2TPUsername -Password $this.L2TPPassword
+        } elseif ($this.Protocol == "IKEv2/IPsec") {
+            New-VpnConnection -Name $this.Name -Protocol "IKEv2/IPsec" -SharedKey $this.IKEv2SharedKey -PreSharedKey $this.IKEv2PreSharedKey
+        }
     }
 
     public New-VpnConnectionConfiguration() {
@@ -47,6 +64,7 @@ class VpnConnection {
     }
 }
 
+# Function to create VPN connections from an XML file
 function Create-VpnConnectionsFromXml {
     param (
         [Parameter(Mandatory)]
@@ -54,23 +72,12 @@ function Create-VpnConnectionsFromXml {
         [string] $ConfigFileFolder = "C:\VPN\ClientConfigs"
     )
 
-    # Validate the XML schema
+   # Validate the XML schema
 
     Validate-XmlSchema "C:\VPN\VPNConfigurations.xsd"
 
-    $configFile = [xml](Get-Content $XmlFilePath)
+    $configFile = [xml](get-content $XmlFilePath)
 
     foreach ($connection in $configFile.Connection) {
-       # Create a new instance of the VpnConnection class
-        $vpnConnection = new-object VpnConnection $connection.Name $connection.Protocol $connection.LocalGatewayName $connection.RemoteGatewayName $connection.LocalGatewayIP $connection.RemoteGatewayIP $connection.SharedKey
-
-        # Create the VPN connection
-        $vpnConnection.New-VpnConnection()
-
-        # Create VPN client configuration file
-        $vpnConnection.New-VpnConnectionConfiguration()
-    }
-}
-
-# Call the function to create VPN connections
-Create-VpnConnectionsFromXml "C:\VPN\VPNConfigurations.xml"
+        # Create a new instance of the VpnConnection class
+        $vpnConnection = new-object VpnConnection $connection.Name $connection.Protocol $connection.LocalGatewayName $connection.RemoteGatewayName $connection.LocalGatewayIP $connection.RemoteGatewayIP $connection.SharedKey $connection.WireGuardPrivateKey $connection.WireGuardPublicKey $connection.L2TPUsername
