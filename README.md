@@ -11,7 +11,7 @@
 
 - To run the script, open a command prompt or PowerShell and run the following command:
 
-      Create-VpnConnectionsFromXml <caminho_para_arquivo_xml> [<pasta_destino_para_arquivos_de_configuração>]
+      Create-VpnConnectionsFromXml <path_to_xml_file> [<destination_folder_for_configuration_files>]
 
 - For example:
 - 
