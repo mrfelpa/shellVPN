@@ -1,4 +1,4 @@
-import-module VpnClientConfiguration
+import-module VpnClient
 import-module VpnGateway
 
 # Function to validate the XML schema
